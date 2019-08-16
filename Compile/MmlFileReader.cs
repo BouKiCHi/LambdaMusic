@@ -191,6 +191,7 @@ namespace LambdaMusic.Compile {
             var fl = FetchLine();
 
             var m = Regex.Match(fl, @"\d+");
+            if (!m.Success) return null;
             StepCount(m.Length);
             return m.Value;
         }

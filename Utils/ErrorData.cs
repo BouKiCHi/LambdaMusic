@@ -33,6 +33,7 @@ namespace LambdaMusic {
             AlreadyBuiltTrack,
             TrackNameIsNotAssigned,
             ParameterIsWrong,
+            UnknownCommandName,
         }
 
         Dictionary<Type, string> ErrorMessage = new Dictionary<Type, string>() {

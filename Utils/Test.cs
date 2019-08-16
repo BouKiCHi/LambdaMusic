@@ -7,7 +7,7 @@ namespace LambdaMusic {
         private static Random random = new Random();
 
         public static void ShowTestTable() {
-            var tbl = new Table();
+            var tbl = new TextTable();
 
             var wt = Enumerable.Range(0, 4).Select(x => GetRandomValue(25, 10)).ToArray();
 

@@ -5,24 +5,32 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace LambdaMusic {
-    class Table {
+    class TextTable {
         public List<TableRow> Rows = new List<TableRow>();
-
+        public Dictionary<int, int> UserWidth = new Dictionary<int, int>();
+            
         public void ShowTable() {
             var MaxCell = Rows.Max(x => x.Cell.Count);
-            var WidthData = Enumerable.Range(0, MaxCell).Select(x => CellWidth(x)).ToArray();
-            var Width = WidthData.Aggregate((t, v) => t + v);
+            var WidthData = Enumerable.Range(0, MaxCell)
+                .Select(x => UserWidth.ContainsKey(x) ? UserWidth[x] : CellWidth(x))
+                .ToArray();
+
+            var Width = WidthData.Sum();
             Width = Width + 1 + MaxCell;
             WriteBorderText(MaxCell, WidthData);
             
             for(var rc = 0; rc < Rows.Count; rc++) {
-                if (rc > 0) {
-                    Console.WriteLine(new string('-', Width));
-                }
+                if (rc == 1) { WriteBorderText(MaxCell, WidthData); }
                 var r = Rows[rc];
                 WriteRowText(MaxCell, WidthData, r);
             }
             WriteBorderText(MaxCell, WidthData);
+        }
+
+        public TableRow NewRow() {
+            var r = new TableRow();
+            AddRow(r);
+            return r;
         }
 
         public void AddRow(TableRow row) {

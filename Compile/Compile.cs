@@ -9,11 +9,19 @@ namespace LambdaMusic.Compile {
 
         SongData Song = null;
         public bool Verbose = true;
+        CompileHeader Header = null;
+        CompileCommand Command = null;
+
+        public Compile() {
+            Command = new CompileCommand(Error);
+            Header = new CompileHeader(Error);
+        }
 
 
         public void CompileFile(string filename) {
             var BaseName = Path.GetFileNameWithoutExtension(filename);
             string OutputFilename = BaseName + ".s98";
+            Console.WriteLine($"Input Filename:{filename}");
 
             ParseMmlFile(filename);
             if (Error.HasError) {
@@ -24,6 +32,28 @@ namespace LambdaMusic.Compile {
             // Song = SongTest.MakeTestSong();
             var Driver = new LogDriver();
             Driver.Make(OutputFilename, Song);
+
+            ShowResult();
+        }
+
+        private void ShowResult() {
+            var tbl = new TextTable();
+            var row = tbl.NewRow();
+
+            foreach (var t in new string[] { "Track", "DeviceNo", "ChannelNo", "Tick", "Loop" }) row.AddCell(t);
+            tbl.UserWidth[0] = 15;
+            tbl.UserWidth[3] = 10;
+            tbl.UserWidth[4] = 10;
+            foreach (var trk in Song.TrackWorkList) {
+                row = tbl.NewRow();
+                row.AddCell(trk.TrackName);
+                row.AddCell(trk.DeviceNo.ToString());
+                row.AddCell(trk.ChannelNo.ToString());
+                row.AddCell(trk.Track.TotalTick.ToString());
+                row.AddCell(trk.Track.LoopTick.ToString());
+            }
+
+            tbl.ShowTable();
         }
 
         private void ParseMmlFile(string filename) {
@@ -85,16 +115,18 @@ namespace LambdaMusic.Compile {
             var Pos = m.GetPosition();
             m.StepNextCharacter();
             var Name = m.ReadName();
-            VerboseWriteLine($"{Pos} Header: {Name}");
+            VerboseWriteLine($"--- Header: {Name} {Pos} ---");
 
             List<string> Parameter = new List<string>();
 
+            bool SkipSeparator = false;
+
             while(!m.IsEof()) {
-                var ct = ReadNextType(m);
-                if (m.IsLineEnd(ct)) break;
-                if (m.IsSeparator(ct)) { ct = m.ReadNextType(); }
-                if (m.IsSpace(ct)) { ct = m.ReadNextType(); }
-                if (m.IsLineEnd(ct)) break;
+                var ct = SkipSpaceAndFetch(m);
+                if (m.IsLineEnd(ct)) break; // 改行は終了
+                if (SkipSeparator && m.IsSeparator(ct)) { ct = m.ReadNextType(); }
+                if (m.IsSpace(ct)) { ct = m.ReadNextType(); } 
+                if (m.IsLineEnd(ct)) break; // 改行は終了
 
                 if (ct != MmlCharactorType.GeneralChanacter) {
                     Error.Add(ErrorData.Type.UnknownCharacterUsed);
@@ -111,15 +143,15 @@ namespace LambdaMusic.Compile {
                 } else {
                     t = m.ReadText();
                 }
-
+                SkipSeparator = true;
                 Parameter.Add(t);
             }
 
-            Song.SetHeader(Name, Parameter);
+            Header.Set(Song, Name, Parameter);
         }
 
-        // スペースを飛ばして次のタイプを読む
-        private static MmlCharactorType ReadNextType(MmlFileReader m) {
+        // 空白スキップ＆フェッチ
+        private static MmlCharactorType SkipSpaceAndFetch(MmlFileReader m) {
             m.SkipIfSpace();
             return m.FetchType();
         }
@@ -151,9 +183,12 @@ namespace LambdaMusic.Compile {
             }
         }
 
+        /// <summary>
+        /// トラックコマンド読み出し
+        /// </summary>
         private void ReadTrackText(string Name, MmlFileReader m) {
 
-            var ct = ReadNextType(m);
+            var ct = SkipSpaceAndFetch(m);
             var TrackData = Song.GetTrack(Name);
 
             bool Track = false;
@@ -165,7 +200,7 @@ namespace LambdaMusic.Compile {
 
             if (Track) {
                 if (Block) m.SkipType();
-                ReadUntilNextTrack(TrackData, m, Block);
+                ReadCommandUntilNextTrack(TrackData, m, Block);
                 return;
             }
 
@@ -203,12 +238,12 @@ namespace LambdaMusic.Compile {
             var Pos = m.GetPosition();
             m.StepNextCharacter();
             var Name = m.ReadName();
-            VerboseWriteLine($"{Pos} Effect: {Name}");
+            VerboseWriteLine($"--- Effect: {Name} {Pos} ---");
             if (!SkipUntilBlockStart(m)) return;
             SkipUntilBlockEnd(m);
         }
 
-        private void ReadUntilNextTrack(TrackData Track, MmlFileReader m, bool Block = false) {
+        private void ReadCommandUntilNextTrack(TrackData Track, MmlFileReader m, bool Block = false) {
             while (true) {
                 var ct = m.FetchType();
                 // EOF
@@ -232,8 +267,12 @@ namespace LambdaMusic.Compile {
                     return;
                 }
 
+                // トラックコマンド
                 var Text = $"{m.GetPosition()} {ct}";
-                if (ct == MmlCharactorType.GeneralChanacter) Text += $" [{m.FetchCharacter()}]";
+                if (ct == MmlCharactorType.GeneralChanacter) {
+                    Text += $" [{m.FetchCharacter()}]";
+                    Command.Make(Song, Track, m);
+                }
                 VerboseWriteLine(Text);
                 m.SkipType();
             }
@@ -283,8 +322,8 @@ namespace LambdaMusic.Compile {
 
         private int ReadParameter(MmlFileReader m) {
             var t = m.ReadNumber();
-            int result;
-            if (!int.TryParse(t, out result)) {
+            int result = 0;
+            if (t == null || !int.TryParse(t, out result)) {
                 Error.Add(ErrorData.Type.ParameterIsWrong);
             }
             return result;
@@ -332,4 +371,6 @@ namespace LambdaMusic.Compile {
             return true;
         }
     }
+
+
 }
