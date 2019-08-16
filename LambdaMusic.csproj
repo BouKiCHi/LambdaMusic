@@ -47,7 +47,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Compile\Compile.cs" />
+    <Compile Include="Compile\MmlCharactorType.cs" />
     <Compile Include="Compile\MmlFileReader.cs" />
+    <Compile Include="Compile\SongTest.cs" />
     <Compile Include="Compile\ToneHelper.cs" />
     <Compile Include="Compile\ToneText.cs" />
     <Compile Include="Log\ILogChip.cs" />

@@ -13,11 +13,5 @@ namespace LambdaMusic {
             Console.WriteLine("done.");
             Console.ReadKey();
         }
-
-        private static void OutputTest() {
-            OutputTestS98.WriteTestSong();
-            Console.WriteLine("done.");
-        }
-
     }
 }

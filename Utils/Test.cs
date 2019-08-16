@@ -1,4 +1,5 @@
-﻿using System;
+﻿using LambdaMusic.Compile;
+using System;
 using System.Linq;
 
 namespace LambdaMusic {
@@ -35,8 +36,8 @@ namespace LambdaMusic {
 
         public static void ShowError() {
             var err = new ErrorData();
-            err.Add(1, "This is ErrorMessage!");
-            err.Add(2, "ABCDEFG!!!!");
+            var m = new MmlFileReader();
+            err.SetFileReader(m);
             err.ShowMessage();
         }
     }
