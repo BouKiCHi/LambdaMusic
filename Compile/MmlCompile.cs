@@ -4,15 +4,16 @@ using System.Collections.Generic;
 using System.IO;
 
 namespace LambdaMusic.Compile {
-    class Compile {
+    class MmlCompile {
         ErrorData Error = new ErrorData();
 
         SongData Song = null;
         public bool Verbose = true;
+        public bool Play = false;
         CompileHeader Header = null;
         CompileCommand Command = null;
 
-        public Compile() {
+        public MmlCompile() {
             Command = new CompileCommand(Error);
             Header = new CompileHeader(Error);
         }
@@ -34,6 +35,12 @@ namespace LambdaMusic.Compile {
             Driver.Make(OutputFilename, Song);
 
             ShowResult();
+
+            if (Play) PlaySong(OutputFilename);
+        }
+
+        private void PlaySong(string outputFilename) {
+            System.Diagnostics.Process.Start(outputFilename);
         }
 
         private void ShowResult() {
@@ -211,9 +218,8 @@ namespace LambdaMusic.Compile {
         private void ReadMacro(MmlFileReader m) {
             // 位置を固定
             var Pos = m.GetPosition();
-            var Name = "$";
             m.StepNextCharacter();
-            Name += m.ReadName();
+            var Name = m.ReadName();
             VerboseWriteLine($"--- Macro: {Name} {Pos} ---");
             ReadTrackText(Name, m);
         }
@@ -222,9 +228,8 @@ namespace LambdaMusic.Compile {
         private void ReadTone(MmlFileReader m) {
             // 位置を固定
             var Pos = m.GetPosition();
-            var Name = "@";
             m.StepNextCharacter();
-            Name += m.ReadName();
+            var Name = m.ReadName();
             VerboseWriteLine($"--- Tone: {Name} {Pos} ---");
 
             if (!SkipUntilBlockStart(m)) return;
@@ -243,6 +248,10 @@ namespace LambdaMusic.Compile {
             SkipUntilBlockEnd(m);
         }
 
+        /// <summary>
+        /// トラック処理
+        /// </summary>
+
         private void ReadCommandUntilNextTrack(TrackData Track, MmlFileReader m, bool Block = false) {
             while (true) {
                 var ct = m.FetchType();
@@ -259,6 +268,12 @@ namespace LambdaMusic.Compile {
                     return;
                 }
 
+                // 改行
+                if (m.IsSpace(ct) || m.IsComment(ct)) {
+                    m.SkipType();
+                    continue;
+                }
+
                 // ブロック終了
                 if (ct == MmlCharactorType.BlockEnd) {
                     if (!Block) { Error.Add(ErrorData.Type.UnknownCharacterUsed); return; }
@@ -268,13 +283,13 @@ namespace LambdaMusic.Compile {
                 }
 
                 // トラックコマンド
-                var Text = $"{m.GetPosition()} {ct}";
                 if (ct == MmlCharactorType.GeneralChanacter) {
-                    Text += $" [{m.FetchCharacter()}]";
                     Command.Make(Song, Track, m);
+                    var lc = Track.GetLastCommand();
+                    if (lc != null) VerboseWriteLine(lc.ToString());
+                } else {
+                    Error.Add(ErrorData.Type.UnknownCharacterUsed); return;
                 }
-                VerboseWriteLine(Text);
-                m.SkipType();
             }
         }
 

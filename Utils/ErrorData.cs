@@ -34,6 +34,9 @@ namespace LambdaMusic {
             TrackNameIsNotAssigned,
             ParameterIsWrong,
             UnknownCommandName,
+            CountNumberIsWrong,
+            LastNoteNotFound,
+            NoteLengthIsWrong,
         }
 
         Dictionary<Type, string> ErrorMessage = new Dictionary<Type, string>() {
@@ -44,6 +47,21 @@ namespace LambdaMusic {
             { Type.BlockEndNotFound , "ブロック終了記号が見つかりません" },
             { Type.UnknownCharacterUsed , "不明な記号が使われています" },
             { Type.QuoteEndNotFound , "引用符終了記号が見つかりません" },
+
+            { Type.UnknownHeaderName , "不明なヘッダ名です" },
+            { Type.FewParameter , "パラメータが足りません" },
+            { Type.DeviceNoIsOutOfRange , "デバイス番号が範囲外です" },
+            { Type.DeviceNameIsNotSupported , "指定されたデバイスはサポートされていません" },
+            { Type.InvalidNumber , "数値が無効です" },
+            { Type.AlreadyBuiltTrack , "すでにトラックが構築されています" },
+            { Type.TrackNameIsNotAssigned , "トラック名はアサインされていません" },
+
+            { Type.ParameterIsWrong , "パラメータが正しくありません" },
+
+            { Type.UnknownCommandName , "不明なコマンド名です" },
+            { Type.CountNumberIsWrong , "指定されたカウントは正しくありません" },
+            { Type.LastNoteNotFound , "一つ前の音符が見つかりません" },
+            { Type.NoteLengthIsWrong , "音長の指定が正しくありません" },
         };
 
         public void Add(Type ErrorType) {

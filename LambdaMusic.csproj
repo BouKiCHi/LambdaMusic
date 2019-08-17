@@ -46,7 +46,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Compile\Compile.cs" />
+    <Compile Include="Compile\MmlCompile.cs" />
     <Compile Include="Compile\CompileHeader.cs" />
     <Compile Include="Compile\MmlCharactorType.cs" />
     <Compile Include="Compile\MmlFileReader.cs" />
@@ -57,6 +57,7 @@
     <Compile Include="Log\LogDriver.cs" />
     <Compile Include="Log\SongData.cs" />
     <Compile Include="Log\SoundLog.cs" />
+    <Compile Include="OptParse.cs" />
     <Compile Include="Utils\ErrorData.cs" />
     <Compile Include="Log\FMTone.cs" />
     <Compile Include="Log\LogDeviceOpna.cs" />

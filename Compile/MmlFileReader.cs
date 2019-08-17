@@ -126,6 +126,10 @@ namespace LambdaMusic.Compile {
 
         public string ReadName() {
             var fl = FetchLine();
+            return fl[0] == '\"' ? ReadQuote(fl) : ReadName(fl);
+        }
+
+        private string ReadName(string fl) {
             var m = Regex.Match(fl, @"[a-zA-Z0-9_]+");
             StepCount(m.Length);
             return m.Value;
@@ -142,6 +146,10 @@ namespace LambdaMusic.Compile {
 
         public string ReadQuote() {
             var fl = FetchLine();
+            return ReadQuote(fl);
+        }
+
+        private string ReadQuote(string fl) {
             var m = Regex.Match(fl, @"""(\\""|[^""])+""");
             if (!m.Success) return null;
             StepCount(m.Length);
@@ -188,25 +196,29 @@ namespace LambdaMusic.Compile {
         }
 
         public string ReadNumber() {
+            if (IsNextLine()) return null;
             var fl = FetchLine();
-
             var m = Regex.Match(fl, @"\d+");
             if (!m.Success) return null;
             StepCount(m.Length);
             return m.Value;
         }
 
-
         public bool IsEof() {
             return (TextData.Length <= CurrentPosition.LineNo);
         }
 
         public bool IsNextLine() {
-            return (TextData[CurrentPosition.LineNo].Length <= CurrentPosition.ColumnNo);
+            var cp = CurrentPosition;
+            if (cp.LineNo >= TextData.Length) return true;
+            if (cp.ColumnNo >= TextData[cp.LineNo].Length) return true;
+            return false;
         }
 
         public char FetchCharacter() {
-            return TextData[CurrentPosition.LineNo][CurrentPosition.ColumnNo];
+            var cp = CurrentPosition;
+            if (IsNextLine()) return '\0';
+            return TextData[cp.LineNo][cp.ColumnNo];
         }
 
         public string FetchLine() {
