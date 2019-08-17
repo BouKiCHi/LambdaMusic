@@ -69,8 +69,5 @@
     <Compile Include="Utils\Table.cs" />
     <Compile Include="Utils\Test.cs" />
   </ItemGroup>
-  <ItemGroup>
-    <None Include="App.config" />
-  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
