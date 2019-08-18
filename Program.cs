@@ -4,7 +4,7 @@ using LambdaMusic.Compile;
 namespace LambdaMusic {
     class Program {
         static void Main(string[] args) {
-            Console.WriteLine("LambdaMusic ver 0.1");
+            Console.WriteLine("LambdaMusic ver 0.11");
             var op = new OptParse();
             op.Parse(args);
             if (op.Usage()) return;

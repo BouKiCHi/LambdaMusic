@@ -23,7 +23,7 @@ namespace LambdaMusic.Compile {
             var BaseName = Path.GetFileNameWithoutExtension(path);
             var SongFileDirectory = Path.GetDirectoryName(path);
             string OutputFilename = Path.Combine(SongFileDirectory, BaseName + ".s98");
-            Console.WriteLine($"Input Filename:{path}");
+            Console.WriteLine($"InputFile:{path}");
 
             ParseMmlFile(path);
             if (Error.HasError) {
@@ -70,7 +70,7 @@ namespace LambdaMusic.Compile {
 
             var m = new MmlFileReader();
             Error.SetFileReader(m);
-            if (!m.Load(filename)) Error.Add(ErrorData.Type.FileNotFound);
+            if (!m.Load(filename)) { Error.Add(ErrorData.Type.FileNotFound); return; }
 
             while (!m.IsEof() && !Error.HasError) {
                 // 行頭
@@ -149,7 +149,7 @@ namespace LambdaMusic.Compile {
                         return;
                     }
                 } else {
-                    t = m.ReadText();
+                    t = m.ReadUntilNext();
                 }
                 SkipSeparator = true;
                 Parameter.Add(t);
@@ -198,6 +198,7 @@ namespace LambdaMusic.Compile {
 
             var ct = SkipSpaceAndFetch(m);
             var TrackData = Song.GetTrack(Name);
+            if (TrackData == null) return;
 
             bool Track = false;
             bool Block = false;

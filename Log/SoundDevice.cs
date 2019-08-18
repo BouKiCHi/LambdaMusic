@@ -48,13 +48,17 @@ namespace LambdaMusic {
             Clock = 0;
         }
         public SoundDevice(DeviceType type) {
-            Device = type;
-            Clock = GetDefaultClock(type);
+            SetDevice(type);
         }
 
         public SoundDevice(DeviceType type, int clock) {
             Device = type;
             Clock = clock;
+        }
+
+        public void SetDevice(DeviceType type) {
+            Device = type;
+            Clock = GetDefaultClock(type);
         }
 
         private int GetDefaultClock(DeviceType type) {

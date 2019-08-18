@@ -187,10 +187,10 @@ namespace LambdaMusic.Compile {
             while (IsNextSkipable()) SkipType();
         }
 
-        public string ReadText() {
+        public string ReadUntilNext() {
             var fl = FetchLine();
 
-            var m = Regex.Match(fl, @"\S+");
+            var m = Regex.Match(fl, @"[^,\s]+");
             StepCount(m.Length);
             return m.Value;
         }

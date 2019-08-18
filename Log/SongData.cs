@@ -54,12 +54,12 @@ namespace LambdaMusic.Log {
             if (IsBuiltTrack) { Error.Add(ErrorData.Type.AlreadyBuiltTrack); return; }
             if (deviceNo < 0) { Error.Add(ErrorData.Type.DeviceNoIsOutOfRange); return;  }
             if (DeviceList.Count <= deviceNo) {
-                for (var i = DeviceList.Count; i < deviceNo; i++) DeviceList.Add(new SoundDevice());
+                for (var i = DeviceList.Count; i <= deviceNo; i++) DeviceList.Add(new SoundDevice());
             }
 
             var DeviceType = SoundDevice.DeviceNameToType(deviceName);
             if (DeviceType == SoundDevice.DeviceType.NONE) { Error.Add(ErrorData.Type.DeviceNameIsNotSupported); return; }
-            DeviceList[deviceNo].Device = DeviceType;
+            DeviceList[deviceNo].SetDevice(DeviceType);
         }
 
 

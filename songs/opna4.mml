@@ -1,0 +1,42 @@
+#DEVICE 0,OPNA
+#DEVICE 1,OPNA
+#DEVICE 2,OPNA
+#DEVICE 3,OPNA
+
+#TRACK A,0,0
+#TRACK B,1,0
+#TRACK C,2,0
+#TRACK D,3,0
+
+// from VAL-SOUND
+@Piano {
+  4,5,
+  31, 5, 0, 0, 0,23, 1, 1, 3, 0
+  20,10, 3, 7, 8, 0, 1, 1, 3, 0
+  31, 3, 0, 0, 0,25, 1, 1, 7, 0
+  31,12, 3, 7,10, 2, 1, 1, 7, 0
+}
+
+// from VAL-SOUND
+@Trumpet {
+2,7,
+13, 6, 0, 8, 1,25, 2, 2, 3, 0
+15, 8, 0, 8, 1,32, 1, 6, 7, 0
+21, 7, 0, 8, 2,42, 0, 2, 3, 0
+18, 4, 0, 8, 2, 0, 1, 2, 0, 0
+}
+
+A,B t120  o4 L v15 l8
+C,D t120  o4 L v15 l8
+A @Piano q3 cde q8 cde  
+B @Piano o3 q3 cde q8 cde 
+C @Piano o5 q3 cde q8 cde
+D @Trumpet o6 q3 cde q8 cde
+
+A,B,C,D {
+  l2
+}
+A c 
+B r d
+C rr e
+D rrr f
