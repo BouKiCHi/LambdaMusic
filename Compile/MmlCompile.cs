@@ -19,12 +19,13 @@ namespace LambdaMusic.Compile {
         }
 
 
-        public void CompileFile(string filename) {
-            var BaseName = Path.GetFileNameWithoutExtension(filename);
-            string OutputFilename = BaseName + ".s98";
-            Console.WriteLine($"Input Filename:{filename}");
+        public void CompileFile(string path) {
+            var BaseName = Path.GetFileNameWithoutExtension(path);
+            var SongFileDirectory = Path.GetDirectoryName(path);
+            string OutputFilename = Path.Combine(SongFileDirectory, BaseName + ".s98");
+            Console.WriteLine($"Input Filename:{path}");
 
-            ParseMmlFile(filename);
+            ParseMmlFile(path);
             if (Error.HasError) {
                 Error.ShowMessage();
                 return;
@@ -234,7 +235,7 @@ namespace LambdaMusic.Compile {
 
             if (!SkipUntilBlockStart(m)) return;
             var Parameter = ReadToneParameter(m);
-            Song.SetTone(Name, Parameter);
+            Song.SetToneParameter(Name, Parameter);
         }
 
         // エフェクト
