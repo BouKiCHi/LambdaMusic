@@ -46,13 +46,14 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Compile\CompileCommand.cs" />
     <Compile Include="Compile\MmlCompile.cs" />
     <Compile Include="Compile\CompileHeader.cs" />
     <Compile Include="Compile\MmlCharactorType.cs" />
     <Compile Include="Compile\MmlFileReader.cs" />
-    <Compile Include="Compile\SongTest.cs" />
+    <Compile Include="Test\SongTest.cs" />
     <Compile Include="Compile\ToneHelper.cs" />
-    <Compile Include="Compile\ToneText.cs" />
+    <Compile Include="Test\ToneText.cs" />
     <Compile Include="Log\ILogChip.cs" />
     <Compile Include="Log\LogDriver.cs" />
     <Compile Include="Log\SongData.cs" />
@@ -61,7 +62,6 @@
     <Compile Include="Utils\ErrorData.cs" />
     <Compile Include="Log\FMTone.cs" />
     <Compile Include="Log\LogDeviceOpna.cs" />
-    <Compile Include="Log\OutputTestS98.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Log\LogS98.cs" />

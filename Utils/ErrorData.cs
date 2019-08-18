@@ -37,6 +37,8 @@ namespace LambdaMusic {
             CountNumberIsWrong,
             LastNoteNotFound,
             NoteLengthIsWrong,
+            ToneNameIsNotFound,
+            VolumeIsWrong,
         }
 
         Dictionary<Type, string> ErrorMessage = new Dictionary<Type, string>() {
@@ -62,6 +64,8 @@ namespace LambdaMusic {
             { Type.CountNumberIsWrong , "指定されたカウントは正しくありません" },
             { Type.LastNoteNotFound , "一つ前の音符が見つかりません" },
             { Type.NoteLengthIsWrong , "音長の指定が正しくありません" },
+            { Type.ToneNameIsNotFound , "指定の音色が見つかりません" },
+            { Type.VolumeIsWrong , "指定の音量が正しくありません" },
         };
 
         public void Add(Type ErrorType) {
