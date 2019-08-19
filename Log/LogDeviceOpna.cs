@@ -9,7 +9,7 @@ namespace LambdaMusic {
         public LogDeviceOpna(SoundLog LogData, int DeviceNo) {
             Log = new LogOpna(LogData, DeviceNo);
             // FM:6 SSG:3 ADPCM:1 Rhythm:1
-            Channel = Enumerable.Range(0, 11).Select(x => new LogChannel(x, Log)).ToArray();
+            Channel = Enumerable.Range(0, 11).Select(x => new LogChannel(DeviceNo, x, Log)).ToArray();
         }
 
         public LogChannel GetChannel(int ch) {
@@ -17,19 +17,29 @@ namespace LambdaMusic {
             return Channel[ch];
         }
     }
-
+    
+    // OPNAのチャンネル単位
     class LogChannel {
+        private int DeviceNo;
         private int Channel;
-        private ILogChip Log;
+        private ILogChip Chip;
         private bool KeyOnFlag;
 
-        public LogChannel(int channel, ILogChip log) {
+        FMTone Tone = null;
+        int Octave;
+        int NoteFine;
+        int PitchValue;
+
+
+        public LogChannel(int device, int channel, ILogChip chip) {
+            this.DeviceNo = device;
             this.Channel = channel;
-            this.Log = log;
+            this.Chip = chip;
         }
 
         public void SetTone(FMTone tone) {
-            Log.SetTone(Channel, tone);
+            Tone = tone;
+            Chip.SetTone(Channel, tone);
         }
 
         public bool IsKeyOn() {
@@ -38,44 +48,51 @@ namespace LambdaMusic {
 
         public void KeyOn() {
             KeyOnFlag = true;
-            Log.KeyOn(Channel);
+            Chip.KeyOn(Channel);
         }
 
         public void KeyOff() {
             KeyOnFlag = false;
-            Log.KeyOff(Channel);
+            Chip.KeyOff(Channel);
         }
 
         public void SetNoteNumber(int NoteNumber) {
-            Log.SetNoteNumber(Channel, NoteNumber);
+            Octave = NoteNumber / 12;
+            NoteFine = NoteNumber % 12;
+
+            if (Channel < 6) { SetNoteNumberFm(); return;  }
+            if (Channel < 9) { SetNoteNumberSsg(); return; }
         }
 
+        private void SetNoteNumberFm() {
+            PitchValue = OpnaTable.GetFmPitch(Octave, NoteFine);
+            Chip.SetPitchValue(Channel, Octave, PitchValue);
+        }
+
+        private void SetNoteNumberSsg() {
+            PitchValue = OpnaTable.GetSsgPitch(Octave, NoteFine);
+            Chip.SetPitchValue(Channel, Octave, PitchValue);
+        }        
+
         public void SetVolume(int vol) {
-            Log.SetVolume(Channel, vol);
+            if (Tone != null) {
+                Chip.WriteVolume(Channel, Tone, vol);
+                return;
+            }
+            Chip.SetVolume(Channel, vol);
         }
 
         // リズム系
         public void SetMultiKeySet(int KeyOn) {
-            Log.SetMultiKeySet(Channel, KeyOn);
-        }
-
-        public void SetToneValue(int v) {
-            Log.SetToneValue(Channel, v);
+            Chip.SetMultiKeySet(Channel, KeyOn);
         }
     }
 
-    class LogOpna : ILogChip {
-        int DeviceNo;
-        SoundLog Log;
-        FMTone Tone;
-        int Octave;
-        int Fnum;
-        byte SsgMixer = 0;
-
+    class OpnaTable {
         // (144 *　周波数(ノート) * (2^20) / マスタークロック) / 2^(オクターブ(4)-1)
         // 例:A4 : (144 *　440.00 * (2^20) / 7987200) / 2^(4-1)
         // C4 to C5
-        int[] FnumberTable = {
+        public static int[] FnumberTable = {
             618,
             655,
             694,
@@ -94,7 +111,7 @@ namespace LambdaMusic {
 
         // 例:A1 (7987200 / 440.00 / (2^3)) / 64
         // C1 to C2
-        int[] SsgTp = {
+        public static int[] SsgTp = {
             3816,
             3602,
             3400,
@@ -110,6 +127,25 @@ namespace LambdaMusic {
             1908,
         };
 
+        public static int GetFmPitch(int Octave, int NoteFine) {
+            return FnumberTable[NoteFine];
+        }
+
+        public static int GetSsgPitch(int Octave, int NoteFine) {
+            // C1からシフト
+            var Shift = Octave - 1;
+            return SsgTp[NoteFine] >> Shift;
+        }
+    }
+
+    class LogOpna : ILogChip {
+        /// チップ単位で共有
+        int DeviceNo;
+        SoundLog Log;
+        byte SsgMixer = 0;
+
+
+
         public LogOpna(SoundLog LogData, int DeviceNo) {
             this.Log = LogData;
             this.DeviceNo = DeviceNo;
@@ -119,25 +155,33 @@ namespace LambdaMusic {
         }
 
         public void SetTone(int channel, FMTone tone) {
-            Tone = tone;
-            Tone?.WriteTone(Log, DeviceNo, channel);
+            tone.WriteTone(Log, DeviceNo, channel);
         }
 
-        private void SetFreqFm(int channel, int block, int fnum) {
+        public void WriteVolume(int channel, FMTone tone, int vol) {
+            tone.WriteVolume(Log, DeviceNo, channel, vol);
+        }
+
+        public void SetPitchValue(int channel, int octave, int pitch) {
+            if (channel < 6) { SetPitchValueFm(channel, octave, pitch); return; }
+            if (channel < 9) { SetPitchValueSsg(channel - 6, octave, pitch); return; }
+        }
+
+        private void SetPitchValueFm(int channel, int block, int value) {
             bool ext = channel >= 3;
             int ch = (channel % 3);
-            byte v = (byte)(Bits.Masked(block, 3, 3) | Bits.Masked(fnum >> 8, 3, 0));
+            byte v = (byte)(Bits.Masked(block, 3, 3) | Bits.Masked(value >> 8, 3, 0));
 
             Write(ext, 0xa4 + ch, v);
-            Write(ext, 0xa0 + ch, Bits.Masked(fnum, 8, 0));
+            Write(ext, 0xa0 + ch, Bits.Masked(value, 8, 0));
         }
 
-        private void SetFreqSsg(int channel, int tp) {
+        private void SetPitchValueSsg(int channel, int block, int value) {
             int ch = (channel % 3);
-            byte v = (byte)(Bits.Masked(tp >> 8, 4, 0));
+            byte v = (byte)(Bits.Masked(value >> 8, 4, 0));
 
             Write(false, 0x01 + (ch*2), v);
-            Write(false, 0x00 + (ch*2), Bits.Masked(tp, 8, 0));
+            Write(false, 0x00 + (ch*2), Bits.Masked(value, 8, 0));
         }
 
         public void SetSlot(int channel, bool SlotOn) {
@@ -165,6 +209,7 @@ namespace LambdaMusic {
             if (!SlotOn) SsgMixer |= Shift;
             Write(false, 0x07, SsgMixer);
         }
+
         public void RhythmOn(int value) {
 
         }
@@ -176,16 +221,13 @@ namespace LambdaMusic {
         public void KeyOff(int channel) {
             SetSlot(channel, false);
         }
+
         private void Write(bool ext, int adr, int val) {
             Log.WriteData(DeviceNo, adr + (ext ? 0x100 : 0), val);
         }
 
         public void SetVolume(int channel, int vol) {
-            if (channel < 6) {
-                if (Tone != null) { Tone.WriteVolume(Log, DeviceNo, channel, vol); }
-                return;
-            }
-
+            if (channel < 6) return;
             if (channel < 9) {
                 SetVolumeSsg(channel - 6, vol);
                 return;
@@ -207,31 +249,7 @@ namespace LambdaMusic {
 
         }
 
-        public void SetNoteNumber(int channel, int noteNumber) {
-            if (channel < 6) { SetNoteFm(channel, noteNumber); return; }
-            if (channel < 9) { SetNoteSsg(channel-6, noteNumber); return; }
-        }
 
-        private void SetNoteSsg(int channel, int noteNumber) {
-            Octave = noteNumber / 12;
-            var Note = noteNumber % 12;
-            var Shift = Octave - 1;
-            // C1からシフト
-            Fnum = SsgTp[Note] >> Shift;
-            SetFreqSsg(channel, Fnum);
-        }
-
-        private void SetNoteFm(int channel, int noteNumber) {
-            Octave = noteNumber / 12;
-            var Note = noteNumber % 12;
-            Fnum = FnumberTable[Note];
-            SetFreqFm(channel, Octave, Fnum);
-        }
-
-        public void SetToneValue(int channel, int toneValue) {
-            if (channel < 6 || 9 <= channel) return;
-            channel -= 6;
-        }
     }
 
 }

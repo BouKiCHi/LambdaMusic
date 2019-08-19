@@ -37,6 +37,6 @@ A,B,C,D {
   l2
 }
 A c 
-B r d
-C rr e
-D rrr f
+B v0 r v15d
+C v0 rr v15e
+D v0 rrr v15f

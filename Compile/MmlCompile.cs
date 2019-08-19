@@ -255,7 +255,7 @@ namespace LambdaMusic.Compile {
         /// </summary>
 
         private void ReadCommandUntilNextTrack(TrackData Track, MmlFileReader m, bool Block = false) {
-            while (true) {
+            while (!Error.HasError) {
                 var ct = m.FetchType();
                 // EOF
                 if (ct == MmlCharactorType.Eof) {
